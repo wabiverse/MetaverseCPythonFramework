@@ -1,0 +1,239 @@
+diff --git a/config.sub b/config.sub
+old mode 100644
+new mode 100755
+index dba16e8..630b5d9
+--- a/config.sub
++++ b/config.sub
+@@ -1126,7 +1126,7 @@ case $cpu-$vendor in
+ 	xscale-* | xscalee[bl]-*)
+ 		cpu=`echo "$cpu" | sed 's/^xscale/arm/'`
+ 		;;
+-	arm64-* | aarch64le-*)
++	arm64-* | arm64_32-* | aarch64le-*)
+ 		cpu=aarch64
+ 		;;
+ 
+@@ -1728,7 +1728,7 @@ case $os in
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
+ 	     | hiux* | abug | nacl* | netware* | windows* \
+-	     | os9* | macos* | osx* | ios* \
++	     | os9* | macos* | osx* | xros* | ios* | watchos* | tvos* \
+ 	     | mpw* | magic* | mmixware* | mon960* | lnews* \
+ 	     | amigaos* | amigados* | msdos* | newsos* | unicos* | aof* \
+ 	     | aos* | aros* | cloudabi* | sortix* | twizzler* \
+@@ -1790,6 +1790,8 @@ case $kernel-$os in
+ 		;;
+ 	os2-emx)
+ 		;;
++	xros*-simulator | ios*-simulator | tvos*-simulator | watchos*-simulator)
++		;;
+ 	*-eabi* | *-gnueabi*)
+ 		;;
+ 	-*)
+diff --git a/generate-darwin-source-and-headers.py b/generate-darwin-source-and-headers.py
+index 5b60ccc..c801dc0 100755
+--- a/generate-darwin-source-and-headers.py
++++ b/generate-darwin-source-and-headers.py
+@@ -47,8 +47,21 @@ class armv7_platform(Platform):
+     src_files = ['sysv.S', 'ffi.c', 'internal.h']
+ 
+ 
++class xros_simulator_arm64_platform(arm64_platform):
++    target = 'arm64-apple-xros-simulator'
++    directory = 'darwin_xros'
++    sdk = 'xrsimulator'
++    version_min = '-mios-version-min=1.0'
++
++
++class xros_device_arm64_platform(arm64_platform):
++    target = 'arm64-apple-xros'
++    directory = 'darwin_xros'
++    sdk = 'xros'
++    version_min = '-mios-version-min=1.0'
++
++
+ class ios_simulator_i386_platform(i386_platform):
+-    triple = 'i386-apple-darwin11'
+     target = 'i386-apple-ios-simulator'
+     directory = 'darwin_ios'
+     sdk = 'iphonesimulator'
+@@ -56,7 +69,6 @@ class ios_simulator_i386_platform(i386_platform):
+ 
+ 
+ class ios_simulator_x86_64_platform(x86_64_platform):
+-    triple = 'x86_64-apple-darwin13'
+     target = 'x86_64-apple-ios-simulator'
+     directory = 'darwin_ios'
+     sdk = 'iphonesimulator'
+@@ -64,7 +76,6 @@ class ios_simulator_x86_64_platform(x86_64_platform):
+ 
+ 
+ class ios_simulator_arm64_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin20'
+     target = 'arm64-apple-ios-simulator'
+     directory = 'darwin_ios'
+     sdk = 'iphonesimulator'
+@@ -72,7 +83,6 @@ class ios_simulator_arm64_platform(arm64_platform):
+ 
+ 
+ class ios_device_armv7_platform(armv7_platform):
+-    triple = 'arm-apple-darwin11'
+     target = 'armv7-apple-ios'
+     directory = 'darwin_ios'
+     sdk = 'iphoneos'
+@@ -80,7 +90,6 @@ class ios_device_armv7_platform(armv7_platform):
+ 
+ 
+ class ios_device_arm64_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin13'
+     target = 'arm64-apple-ios'
+     directory = 'darwin_ios'
+     sdk = 'iphoneos'
+@@ -88,7 +97,6 @@ class ios_device_arm64_platform(arm64_platform):
+ 
+ 
+ class desktop_x86_64_platform(x86_64_platform):
+-    triple = 'x86_64-apple-darwin10'
+     target = 'x86_64-apple-macos'
+     directory = 'darwin_osx'
+     sdk = 'macosx'
+@@ -96,7 +104,6 @@ class desktop_x86_64_platform(x86_64_platform):
+ 
+ 
+ class desktop_arm64_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin20'
+     target = 'arm64-apple-macos'
+     directory = 'darwin_osx'
+     sdk = 'macosx'
+@@ -104,7 +111,6 @@ class desktop_arm64_platform(arm64_platform):
+ 
+ 
+ class tvos_simulator_x86_64_platform(x86_64_platform):
+-    triple = 'x86_64-apple-darwin13'
+     target = 'x86_64-apple-tvos-simulator'
+     directory = 'darwin_tvos'
+     sdk = 'appletvsimulator'
+@@ -112,7 +118,6 @@ class tvos_simulator_x86_64_platform(x86_64_platform):
+ 
+ 
+ class tvos_simulator_arm64_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin20'
+     target = 'arm64-apple-tvos-simulator'
+     directory = 'darwin_tvos'
+     sdk = 'appletvsimulator'
+@@ -120,7 +125,6 @@ class tvos_simulator_arm64_platform(arm64_platform):
+ 
+ 
+ class tvos_device_arm64_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin13'
+     target = 'arm64-apple-tvos'
+     directory = 'darwin_tvos'
+     sdk = 'appletvos'
+@@ -128,7 +132,6 @@ class tvos_device_arm64_platform(arm64_platform):
+ 
+ 
+ class watchos_simulator_i386_platform(i386_platform):
+-    triple = 'i386-apple-darwin11'
+     target = 'i386-apple-watchos-simulator'
+     directory = 'darwin_watchos'
+     sdk = 'watchsimulator'
+@@ -136,7 +139,6 @@ class watchos_simulator_i386_platform(i386_platform):
+ 
+ 
+ class watchos_simulator_x86_64_platform(x86_64_platform):
+-    triple = 'x86_64-apple-darwin13'
+     target = 'x86_64-apple-watchos-simulator'
+     directory = 'darwin_watchos'
+     sdk = 'watchsimulator'
+@@ -144,7 +146,6 @@ class watchos_simulator_x86_64_platform(x86_64_platform):
+ 
+ 
+ class watchos_simulator_arm64_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin20'
+     target = 'arm64-apple-watchos-simulator'
+     directory = 'darwin_watchos'
+     sdk = 'watchsimulator'
+@@ -152,7 +153,6 @@ class watchos_simulator_arm64_platform(arm64_platform):
+ 
+ 
+ class watchos_device_armv7k_platform(armv7_platform):
+-    triple = 'arm-apple-darwin11'
+     target = 'armv7k-apple-watchos'
+     directory = 'darwin_watchos'
+     sdk = 'watchos'
+@@ -161,7 +161,6 @@ class watchos_device_armv7k_platform(armv7_platform):
+ 
+ 
+ class watchos_device_arm64_32_platform(arm64_platform):
+-    triple = 'aarch64-apple-darwin13'
+     target = 'arm64_32-apple-watchos'
+     directory = 'darwin_watchos'
+     sdk = 'watchos'
+@@ -229,7 +228,15 @@ def build_target(platform, platform_headers):
+     working_dir = os.getcwd()
+     try:
+         os.chdir(build_dir)
+-        subprocess.check_call(['../configure', '-host', platform.triple], env=env)
++        subprocess.check_call(
++            [
++                "../configure",
++                f"--host={platform.target}",
++            ] + (
++                [] if platform.sdk == "macosx" else [f"--build={os.uname().machine}-apple-darwin"]
++            ),
++            env=env
++        )
+     finally:
+         os.chdir(working_dir)
+ 
+@@ -247,6 +254,7 @@ def build_target(platform, platform_headers):
+ 
+ def generate_source_and_headers(
+     generate_osx=True,
++    generate_xros=True,
+     generate_ios=True,
+     generate_tvos=True,
+     generate_watchos=True,
+@@ -254,6 +262,9 @@ def generate_source_and_headers(
+     copy_files('src', 'darwin_common/src', pattern='*.c')
+     copy_files('include', 'darwin_common/include', pattern='*.h')
+ 
++    if generate_xros:
++        copy_src_platform_files(xros_simulator_arm64_platform)
++        copy_src_platform_files(xros_device_arm64_platform)
+     if generate_ios:
+         copy_src_platform_files(ios_simulator_i386_platform)
+         copy_src_platform_files(ios_simulator_x86_64_platform)
+@@ -276,6 +287,9 @@ def generate_source_and_headers(
+ 
+     platform_headers = collections.defaultdict(set)
+ 
++    if generate_xros:
++        build_target(xros_simulator_arm64_platform, platform_headers)
++        build_target(xros_device_arm64_platform, platform_headers)
+     if generate_ios:
+         build_target(ios_simulator_i386_platform, platform_headers)
+         build_target(ios_simulator_x86_64_platform, platform_headers)
+@@ -305,6 +319,7 @@ def generate_source_and_headers(
+ 
+ if __name__ == '__main__':
+     parser = argparse.ArgumentParser()
++    parser.add_argument('--only-xros', action='store_true', default=False)
+     parser.add_argument('--only-ios', action='store_true', default=False)
+     parser.add_argument('--only-osx', action='store_true', default=False)
+     parser.add_argument('--only-tvos', action='store_true', default=False)
+@@ -312,8 +327,9 @@ if __name__ == '__main__':
+     args = parser.parse_args()
+ 
+     generate_source_and_headers(
+-        generate_osx=not args.only_ios and not args.only_tvos and not args.only_watchos,
+-        generate_ios=not args.only_osx and not args.only_tvos and not args.only_watchos,
+-        generate_tvos=not args.only_ios and not args.only_osx and not args.only_watchos,
+-        generate_watchos=not args.only_ios and not args.only_osx and not args.only_tvos,
++        generate_osx=not args.only_xros and not args.only_ios and not args.only_tvos and not args.only_watchos,
++        generate_xros=not args.only_osx and not args.only_ios and not args.only_tvos and not args.only_watchos,
++        generate_ios=not args.only_xros and not args.only_osx and not args.only_tvos and not args.only_watchos,
++        generate_tvos=not args.only_xros and not args.only_ios and not args.only_osx and not args.only_watchos,
++        generate_watchos=not args.only_xros and not args.only_ios and not args.only_osx and not args.only_tvos,
+     )
